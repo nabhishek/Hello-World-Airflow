@@ -3,19 +3,28 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 
 with DAG(
-    dag_id="hello-world",
+    dag_id="simple_etl_pipeline",
     start_date=datetime(2023, 8, 15),
     schedule="@once",
-    tags=["tutorial"]
+    tags=["example", "etl"]
 ) as dag:
-    # Tasks are represented as operators
-    task1 = BashOperator(task_id="task1", bash_command="echo task2")
+    # Extract task: Simulate extracting data by creating a sample file
+    extract_task = BashOperator(
+        task_id="extract_data",
+        bash_command="echo 'name,age,city\nAlice,30,New York\nBob,25,Los Angeles' > /tmp/data.csv"
+    )
 
-    task2 = BashOperator(task_id="task2", bash_command="echo task2")
+    # Transform task: Simulate transforming data by filtering and saving to a new file
+    transform_task = BashOperator(
+        task_id="transform_data",
+        bash_command="awk -F',' '$2 > 25 || NR==1' /tmp/data.csv > /tmp/transformed_data.csv"
+    )
 
-    task3 = BashOperator(task_id="task3", bash_command="echo task3")
+    # Load task: Simulate loading data by displaying the transformed data
+    load_task = BashOperator(
+        task_id="load_data",
+        bash_command="cat /tmp/transformed_data.csv"
+    )
 
-    task4 = BashOperator(task_id="task4", bash_command="echo task4")
-
-    # Set dependencies between tasks
-    task1 >> task2 >> task3 >> task4
+    # Set dependencies: Extract -> Transform -> Load
+    extract_task >> transform_task >> load_task
